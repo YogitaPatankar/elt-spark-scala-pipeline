@@ -1,0 +1,21 @@
+# Spark logs
+*.log
+
+# SBT files
+target/
+project/target/
+project/project/
+
+# IntelliJ / VS Code
+.idea/
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Airflow DB
+airflow.db
+
+# Data
+data/*.csv

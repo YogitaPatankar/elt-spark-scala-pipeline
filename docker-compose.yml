@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports: ["8123:8123", "9000:9000"]
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    ports: ["5432:5432"]
+  spark-job:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    volumes:
+      - ./data:/data
+    depends_on:
+      - clickhouse
+      - postgres
+  airflow:
+    image: apache/airflow:2.7.1-python3.11
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////root/airflow/airflow.db
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports: ["8080:8080"]
+    command: webserver
+  metabase:
+    image: metabase/metabase
+    ports: ["3000:3000"]
