@@ -6,7 +6,8 @@ object Main {
     val spark = SparkSession.builder().appName("TelecomChurnETL").master("local[*]").getOrCreate()
     val df = spark.read.option("header", "true").option("inferSchema", "true").csv("/data/telecom_churn.csv")
     val filled = df.na.fill(Map("TotalCharges" -> 0, "MonthlyCharges" -> 0))
-    val anonymized = filled.withColumn("CustomerID", sha2(col("CustomerID").cast("string"), 256)).drop("PhoneNumber")
+    val anonymized = filled.withColumn("CustomerID", sha2(col("CustomerID").cast("string"), 256)).withColumn("PhoneService", lit("XXX-XXX-XXXX"))
+    
 
     anonymized.write.format("jdbc")
       .option("url", "jdbc:clickhouse://clickhouse:8123/default")
