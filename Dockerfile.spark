@@ -1,8 +1,24 @@
 FROM bitnami/spark:3.4.1
+
 USER root
-RUN apt-get update && apt-get install -y openjdk-11-jdk curl
+
+# Install dependencies and sbt
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jdk curl gnupg2 && \
+    curl -sL https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99e82a75642ac823 | apt-key add - && \
+    echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list && \
+    apt-get update && \
+    apt-get install -y sbt
+
+# Copy source code and build the jar
 COPY spark-job /opt/spark-job
 WORKDIR /opt/spark-job
-RUN curl -s https://get.sdkman.io | bash && \
-    bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && sdk install sbt"
-ENTRYPOINT ["sbt", "run"]
+
+# Package the app with sbt to create the fat JAR
+RUN sbt package
+
+# Replace with your main class name
+ENV MAIN_CLASS=com.example.Main
+
+# Use spark-submit to run the packaged jar
+ENTRYPOINT ["/opt/bitnami/spark/bin/spark-submit", "--class", "com.example.Main", "/opt/spark-job/target/scala-2.12/spark-job_2.12-0.1.0-SNAPSHOT.jar"]
